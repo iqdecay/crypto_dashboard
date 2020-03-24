@@ -16,8 +16,19 @@ cmc_key = api_key[0]["coinmarketcap"]
 def get_available_symbols():
     params = {
         "CMC_PRO_API_KEY": cmc_key,
+        "limit": 1000,
+        "sort": "cmc_rank",
     }
-    r = requests.get(cmc_url + endpoint_symbols, params)
+    try:
+        r = requests.get(cmc_url + endpoint_symbols, params)
+    except (ConnectionError, Timeout, TooManyRedirects) as e:
+        raise e
+    if r.status_code == 200:
+        data = r.json()["data"]
+    symbol_list = []
+    for currency in data:
+        symbol_list.append(currency["symbol"])
+    return symbol_list
 
 
 def get_quotes(symbol):
