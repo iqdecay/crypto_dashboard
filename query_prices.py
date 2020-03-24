@@ -11,28 +11,24 @@ with open(API_KEY_FILE, 'r') as api_key_file:
 cmc_key = api_key[0]["coinmarketcap"]
 
 
-def get_quotes(*symbols):
-    symbols = list(symbols)
-    symbols_string = ",".join(symbols).upper()
+def get_quotes(symbol):
     params = {
         "CMC_PRO_API_KEY": cmc_key,
-        "symbol": symbols_string
+        "symbol": symbol
     }
     try:
         r = requests.get(cmc_url, params)
     except (ConnectionError, Timeout, TooManyRedirects) as e:
         raise e
     if r.status_code == 200:
-        quotes = {}
-        data = r.json()["data"]
-        for symbol in symbols:
-            usd_price = data[symbol]["quote"]["USD"]["price"]
-            quotes[symbol] = usd_price
-        return quotes
+        price = r.json()["data"][symbol]["quote"]["USD"]["price"]
+        return price
     else:
         status = r.status_code
         message = r.json()["status"]["error_message"]
-        raise ValueError(f"Request failed with status {status} : {message}")
+        print(f"Request for symbol {symbol} failed with status {status} : "
+              f"{message}")
+        return None
 
 
 def get_fiat_conversion(source_symbol, target_symbol):
