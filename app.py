@@ -128,7 +128,7 @@ def update_data_with_user_input(data_timestamp, click_timestamp, data):
     elif data_timestamp < click_timestamp:
         # Add a row to the table
         data.append({column_ids[i]: '' for i in range(len(column_ids))})
-    return data
+    return data, significant(total_amount)
 
 
 @app.callback(
@@ -139,11 +139,14 @@ def update_pie_chart(data):
     n_rows = len(data)
     return {
         'data': [{
+            'title': "Portfolio allocation",
+            'showlegend': False,
             'type': 'pie',
             'values': [data[i]["percent"] for i in range(n_rows)],
             'labels': [data[i]["ticker"] for i in range(n_rows)],
             'hole': 0.6,
-            'textinfo': 'label'
+            'textinfo': 'label+percent',
+            'uniformtext_mode':"hide",
         }]
     }
 
@@ -155,7 +158,8 @@ def update_pie_chart(data):
 def save_data_table(n_clicks, data):
     if n_clicks != 0:
         new_df = pd.DataFrame.from_records(data)
-        new_df.dropna(thresh=2, inplace=True)
+        new_df.replace("", nan, inplace=True)
+        new_df = new_df.dropna("index", thresh=2)
         new_df.to_csv("portfolio.csv", index=False)
 
 
