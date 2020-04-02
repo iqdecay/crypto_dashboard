@@ -30,8 +30,7 @@ def significant(x, n=4):
 USD_TO_EUR = significant(get_fiat_conversion("USD", "EUR"), 4)
 
 quotes = dict()
-for symbol in df["ticker"]:
-    quotes[symbol] = get_quotes(symbol.upper())
+quotes = get_quotes(df["ticker"])
 
 available_symbols = get_available_symbols()
 

@@ -31,24 +31,29 @@ def get_available_symbols():
     return symbol_list
 
 
-def get_quotes(symbol):
+def get_quotes(symbols):
+    symbols_string = ','.join(symbols)
     params = {
         "CMC_PRO_API_KEY": cmc_key,
-        "symbol": symbol
+        "symbol": symbols_string
     }
     try:
         r = requests.get(cmc_url + endpoint_crypto, params)
     except (ConnectionError, Timeout, TooManyRedirects) as e:
         raise e
+    quotes = dict()
     if r.status_code == 200:
-        price = r.json()["data"][symbol]["quote"]["USD"]["price"]
-        return price
-    else:
-        status = r.status_code
+        for symbol in symbols:
+            price = r.json()["data"][symbol]["quote"]["USD"]["price"]
+            quotes[symbol] = price
+        return quotes
+    elif r.status_code == 400:
         message = r.json()["status"]["error_message"]
-        print(f"Request for symbol {symbol} failed with status {status} : "
-              f"{message}")
-        return None
+        for symbol in symbols:
+            if symbol in message:
+                print(f"Request for symbol {symbol} failed ")
+                symbols.remove(symbol)
+        return get_quotes(symbols)
 
 
 def get_fiat_conversion(source_symbol, target_symbol):
