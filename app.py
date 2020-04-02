@@ -4,7 +4,9 @@ from dash.dependencies import Input, Output, State
 import dash_table
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_bootstrap_components as dbc
 import pandas as pd
+from numpy import nan
 from constants import column_names, column_ids, editable, data_types
 from query_prices import get_quotes, get_fiat_conversion, get_available_symbols
 
@@ -17,8 +19,8 @@ if os.path.exists("portfolio.csv"):
         raise FileNotFoundError("Unable to load portfolio but file exists")
 else:
     df = pd.DataFrame(columns=column_ids)
+# Sort by largest amount :
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 
 def significant(x, n=4):
@@ -34,40 +36,67 @@ quotes = get_quotes(df["ticker"])
 
 available_symbols = get_available_symbols()
 
+# external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+external_stylesheets = [dbc.themes.BOOTSTRAP]
 app = dash.Dash(__name__,
                 show_undo_redo=True,
                 external_stylesheets=external_stylesheets)
 
-app.layout = html.Div([
-    dash_table.DataTable(
-        id='data-table',
-        columns=[{
-            'name': column_names[i],
-            'id': column_ids[i],
-            'deletable': False,
-            'editable': editable[column_ids[i]],
-            'renamable': False,
-            'format': {
-                "locale":
-                    {'symbol': ["$", '#']},
-                'nully': ""
-            }
-        } for i in range(0, 7)],
-        data=df.to_dict('records'),
-        editable=True,
-        data_timestamp=0,
-    ),
-    html.Button('Add Row', id='add-row-button', n_clicks=0,
-                n_clicks_timestamp=0),
-    html.Button('Save the table !', id='save-data-button', n_clicks=0),
-    html.Div(id='hidden-save-button-div', style={'display': 'none'}),
-    html.Div(id='hidden-row-button-div', style={'display': 'none'}),
-    dcc.Graph(id='pie-chart')
-])
+app.layout = dbc.Container(
+    [
+        dbc.Row(
+            [
+                dbc.Col(
+                    dash_table.DataTable(
+                        id='data-table',
+                        columns=[{
+                            'name': column_names[i],
+                            'id': column_ids[i],
+                            'deletable': False,
+                            'editable': editable[column_ids[i]],
+                            'renamable': False,
+                            'format': {
+                                "locale":
+                                    {'symbol': ["$", '#']},
+                                'nully': ""
+                            }
+                        } for i in range(0, 6)],
+                        data=df.to_dict('records'),
+                        editable=True,
+                        data_timestamp=0,
+                        style_cell={'fontSize': 12},
+                    ), width=6),
+                dbc.Col(
+                    dcc.Graph(id='pie-chart'), width=6),
+            ]
+        ),
+        dbc.Row(
+            [
+                dbc.Col(dbc.Button('Add Row', id='add-row-button', n_clicks=0,
+                                   n_clicks_timestamp=0), width=4),
+                dbc.Col(dbc.Button('Save the table !', id='save-data-button', n_clicks=0), width=4),
+                dbc.Col(
+                    [
+                        html.Div("Total amount", id='display_total'),
+                        html.Div(id='hidden-save-button-div', style={'display': 'none'}),
+                        html.Div(id='hidden-row-button-div', style={'display': 'none'}),
+                    ]
+                    , width=4
+                ),
+            ]),
+        dbc.Row(
+            dbc.Col(
+            )),
+    ],
+    style={
+        "width": '90%',
+    }
+)
 
 
 @app.callback(
-    Output('data-table', 'data'),
+    [Output('data-table', 'data'),
+     Output('display_total', 'children')],
     [Input('data-table', 'data_timestamp'),
      Input('add-row-button', 'n_clicks_timestamp')],
     [State('data-table', 'data')])
