@@ -19,8 +19,6 @@ if os.path.exists("portfolio.csv"):
         raise FileNotFoundError("Unable to load portfolio but file exists")
 else:
     df = pd.DataFrame(columns=column_ids)
-# Sort by largest amount :
-
 
 
 def significant(x, n=4):
@@ -99,8 +97,9 @@ app.layout = dbc.Container(
      Output('display_total', 'children')],
     [Input('data-table', 'data_timestamp'),
      Input('add-row-button', 'n_clicks_timestamp')],
-    [State('data-table', 'data')])
-def update_data_with_user_input(data_timestamp, click_timestamp, data):
+    [State('data-table', 'data'),
+     State('display_total', 'children')])
+def update_data_with_user_input(data_timestamp, click_timestamp, data, total):
     # Use timestamp comparison to understand where the input comes from
     if data_timestamp >= click_timestamp:
         # Update the table with the new values
@@ -111,7 +110,7 @@ def update_data_with_user_input(data_timestamp, click_timestamp, data):
                 row["ticker"] = ""
                 return data
             if symbol not in quotes:
-                quotes[symbol] = get_quotes(symbol)
+                quotes[symbol] = get_quotes([symbol])[symbol]
             row['usd_price'] = significant(quotes[row["ticker"]])
             row['eur_price'] = significant(row['usd_price'] * USD_TO_EUR)
             try:
@@ -126,8 +125,8 @@ def update_data_with_user_input(data_timestamp, click_timestamp, data):
                 amount = row['eur_total'] / total_amount
                 row['percent'] = significant(amount * 100, 4)
     elif data_timestamp < click_timestamp:
-        # Add a row to the table
         data.append({column_ids[i]: '' for i in range(len(column_ids))})
+        total_amount = total
     return data, significant(total_amount)
 
 
