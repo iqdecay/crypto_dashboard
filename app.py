@@ -123,7 +123,7 @@ def update_data_with_user_input(data_timestamp, click_timestamp, data, total):
         for row in data:
             if row['amount'] != '':
                 amount = row['eur_total'] / total_amount
-                row['percent'] = significant(amount * 100, 4)
+                row['percent'] = significant(amount * 100,2)
     elif data_timestamp < click_timestamp:
         data.append({column_ids[i]: '' for i in range(len(column_ids))})
         total_amount = total

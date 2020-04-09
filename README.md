@@ -12,7 +12,6 @@ Running the server :
 
 Then go to 127.0.0.1:8050 in your browser 
 
-### Installation :
 ## TODO :
 - [x] Add error checking for requests
 - [x] Query eur to usd on cmc
